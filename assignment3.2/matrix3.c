@@ -18,80 +18,73 @@ double getTime() {
 	return sec;
 }
 
-/* for task 1 only */
-void usage(void)
-{
-	fprintf(stderr, "Usage: cachetest1/2 [--repetitions M] [--array_size N]\n");
-	exit(1);
-}
+
 
 int main(int argc, char* argv[])
 {
 	double t1, t2;
-
-	/* variables for task 1 */
-	unsigned int M = 1000;
-	unsigned int N = 256 * 1024;
-	unsigned int i;
+	unsigned int N = 1000;
+	unsigned int M=100000000;
+	unsigned int i,j,k,ii,jj,kk;
 
 	/* declare variables; examples, adjust for task */
-	  //int *a;
-	double  a[100];
+	double *a;
+	double *b;
+	double *c;
+	double *b_transpose;
 
-
-	/* parameter parsing task 1 */
-	for (i = 1; i < (unsigned)argc; i++) {
-		if (strcmp(argv[i], "--repetitions") == 0) {
-			i++;
-			if (i < argc)
-				sscanf(argv[i], "%u", &M);
-			else
-				usage();
-		}
-		else if (strcmp(argv[i], "--array_size") == 0) {
-			i++;
-			if (i < argc)
-				sscanf(argv[i], "%u", &N);
-			else
-				usage();
-		}
-		else usage();
-	}
+	int block_size=1000000;
 
 
 	/* allocate memory for arrays; examples, adjust for task */
-	a = malloc(N * sizeof(int));
+	a = (double*)malloc(N*N*sizeof(double));
+	b = (double*)malloc(N*N*sizeof(double));
+	c = (double*)malloc(N*N*sizeof(double));
 
 	/* initialise arrray elements */
-		for (int i = 0; i < N; i++) {
-			a[i* N + i] = j * N + 1;
+		for (i = 0; i < N*N; i++) {
+			a[i] = (double)i;
 		}
 
-	for (int i = 0; i < N; i++) {
-			b[i] = i;
+	for (i = 0; i < N*N; i++) {
+			b[i] = (double)i;
 	}
+
 
 	t1 = getTime();
 	/* code to be measured goes here */
 	/***************************************/
-	int sum;
-	for (int i=0; i<N;i++)
-	{
-		sum+=a[b[i]];
-	}
-
+ for (i = 0; i < N; i += block_size) {
+        for (j = 0; j < N; j += block_size) {
+            for ( k = 0; k < N; k += block_size) {
+                // Iterate over the block for 'c' and 'a'
+                for ( ii = i; ii < i + block_size && ii < N; ii++) {
+                    for ( jj = j; jj < j + block_size && jj < N; jj++) {
+                        // Temporarily store the sum
+                        double sum = 0.0;
+                        // Multiply the block of 'a' and 'b'
+                        for (kk = k; kk < k + block_size && kk < N; kk++) {
+                            sum += a[ii * N + kk] * b[kk * N + jj];  // Accessing 1D arrays
+                        }
+                        // Accumulate the result for c[ii][jj]
+                        c[ii * N + jj] += sum;
+                    }
+                }
+            }
+        }
+    }
 
 	/***************************************/
 	t2 = getTime();
 
 	/* output; examples, adjust for task */
 	printf("time: %6.2f secs\n", (t2 - t1));
-	printf(sum);
 	/* IMPORTANT: also print the result of the code, e.g. the sum,
 	 * otherwise compiler might optimise away the code */
-
+	printf("%f",c[N]);
 	 /* free memory; examples, adjust for task */
-	 //free(a);
-
+	free(a);
+	free(b);
+	free(c);
 	return 0;
 }
